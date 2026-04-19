@@ -9,7 +9,12 @@ namespace FresherMisa2026.Application.Interfaces.Repositories
         Task<Employee> GetEmployeeByCode(string code);
         Task<IEnumerable<Employee>> GetEmployeesByDepartmentId(Guid departmentId);
         Task<IEnumerable<Employee>> GetEmployeesByPositionId(Guid positionId);
-        //hàm check tồn tại employee
 
+        //Filter nhân viên
+        Task<IEnumerable<Employee>> GetEmployeesByFilterAsync(Guid? departmentId, Guid? positionId, decimal? salaryFrom, decimal? salaryTo, int? gender, DateTime? hireDateFrom, DateTime? hireDateTo);
+
+
+        // Kiểm tra mã nhân viên đã tồn tại hay chưa
+        Task<bool> CheckCodeExistsAsync(string employeeCode, Guid? employeeId = null);
     }
 }
