@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FresherMisa2026.Entities.Employee
 {
-    [ConfigTable("Employee", false, "EmployeeCode")]
+    [ConfigTable("Employee", true, "EmployeeCode")]
     public class Employee : BaseModel
     {
         [Key]
@@ -29,6 +29,8 @@ namespace FresherMisa2026.Entities.Employee
         public Guid PositionID { get; set; }
 
         public decimal? Salary { get; set; }
+
+        public DateTime? HireDate { get; set; }
 
         public DateTime? CreatedDate { get; set; }
     }

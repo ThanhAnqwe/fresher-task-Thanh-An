@@ -39,7 +39,13 @@ namespace FresherMisa2026.Application.Services
         protected override async Task<bool> ValidateBeforeDeleteAsync(Guid entityId)
         {
             //1. Validate còn nhân viên trong phòng ban không
-            bool hasEmployee = true;
+            bool hasEmployee = await _deptRepository.CheckEmployeeInDepartment(entityId);
+
+            //nếu có throw: không thể xóa phòng ban do đã có nhân viên
+            if (hasEmployee)
+            {
+                throw new Exception("Không thể xóa phòng ban do đã có nhân viên");
+            }
 
             return !hasEmployee;
         }

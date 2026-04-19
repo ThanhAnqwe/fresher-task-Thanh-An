@@ -20,6 +20,19 @@ namespace FresherMisa2026.Infrastructure.Repositories
 
         }
 
+        public async Task<bool> CheckEmployeeInDepartment(Guid departmentId)
+        {
+            string query = SQLExtension.GetQuery("Department.CheckHasEmployee");
+            var @param = new Dictionary<string, object>
+            {
+                {"@DepartmentId", departmentId }
+            };
+
+            var result = await _dbConnection.QueryFirstOrDefaultAsync<int?>(query, param, commandType: System.Data.CommandType.Text);
+
+            return result.HasValue;
+        }
+
         /// <summary>
         /// Lấy department theo code
         /// </summary>

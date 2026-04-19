@@ -138,10 +138,10 @@ namespace FresherMisa2026.Infrastructure.Repositories
             if (_modelType.GetHasDeletedColumn())
             {
                 AppendWhere(query);
-                query.Append("IsDeleted = FALSE");
+                query.Append(" AND IsDeleted = FALSE");
                 whereCount++;
             }
-
+            
             var entities = await _dbConnection.QueryFirstOrDefaultAsync<TEntity>(query.ToString(), new { Id = id }, commandType: CommandType.Text);
 
             return entities;
@@ -166,7 +166,7 @@ namespace FresherMisa2026.Infrastructure.Repositories
                     var keyName = _modelType.GetKeyName();
 
                     var dynamicParams = new DynamicParameters();
-                    dynamicParams.Add($"@v_{keyName}", entityId);
+                    dynamicParams.Add($"@v_{keyName}", entityId.ToString(), DbType.String);
 
                     //2. Kết nối tới CSDL:
                     rowAffects = await _dbConnection.ExecuteAsync($"Proc_Delete{_tableName}ById", param: dynamicParams, transaction: transaction, commandType: CommandType.StoredProcedure);
