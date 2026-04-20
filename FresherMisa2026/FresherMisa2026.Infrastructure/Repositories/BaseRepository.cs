@@ -29,6 +29,7 @@ namespace FresherMisa2026.Infrastructure.Repositories
         public Type _modelType = null;
 
 
+
         //Constructor
         public BaseRepository(IConfiguration configuration)
         {
@@ -208,7 +209,16 @@ namespace FresherMisa2026.Infrastructure.Repositories
 
                     transaction.Commit();
                 }
-                catch
+                catch(MySqlException ex)
+                {
+                    transaction.Rollback();
+                    if (ex.Number == 1062)
+                    {
+                        // Sử dụng một prefix cố định để Service dễ nhận diện
+                        throw new Exception($"DB_DUPLICATE_ERROR: {ex.Message}");
+                    }
+                }
+                catch (Exception)
                 {
                     transaction.Rollback();
                     throw;

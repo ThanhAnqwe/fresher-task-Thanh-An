@@ -201,13 +201,35 @@ namespace FresherMisa2026.Application.Services
             //2. Sử lí lỗi tương ứng
             if (errors.Count == 0)
             {
-                var result = await _baseRepository.InsertAsync(entity);
-                return CreateSuccessResponse(result);
+                try
+                {
+                    var result = await _baseRepository.InsertAsync(entity);
+                    return CreateSuccessResponse(result);
+                }
+                catch (Exception ex)
+                {
+                    
+                    if (ex.Message.StartsWith("DB_DUPLICATE_ERROR"))
+                    {
+                        return CreateErrorResponse(
+                            ResponseCode.BadRequest,
+                            ex.Message,
+                            "Mã đã tồn tại trong hệ thống. Vui lòng kiểm tra lại."
+                        );
+                    }
+
+
+                    return CreateErrorResponse(
+                        ResponseCode.InternalServerError,
+                        ex.Message,
+                        "Có lỗi xảy ra khi thêm bản ghi."
+                    );
+                }
             }
 
             return CreateErrorResponse(
-                ResponseCode.BadRequest, 
-                "Validate thất bại", 
+                ResponseCode.BadRequest,
+                "Validate thất bại",
                 string.Join("; ", errors.Select(e => e.Message))
             );
         }
