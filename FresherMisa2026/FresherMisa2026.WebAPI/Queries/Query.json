@@ -5,4 +5,6 @@
   "Employee.GetByDepartmentId": "SELECT * FROM Employee WHERE DepartmentID=@DepartmentID AND IsDeleted = FALSE",
   "Employee.GetByPositionId": "SELECT * FROM Employee WHERE PositionID=@PositionID AND IsDeleted = FALSE",
   "Department.CheckHasEmployee": "SELECT 1 FROM Employee WHERE DepartmentId = @DepartmentId AND IsDeleted = 0",
+  "Department.GetEmployeesByCode": "SELECT e.* FROM Employee e INNER JOIN Department d ON e.DepartmentID = d.DepartmentID WHERE d.DepartmentCode = @DepartmentCode AND e.IsDeleted = FALSE",
+  "Department.GetEmployeeCountByCode": "SELECT COUNT(e.EmployeeID) FROM Employee e INNER JOIN Department d ON e.DepartmentID = d.DepartmentID WHERE d.DepartmentCode = @DepartmentCode AND e.IsDeleted = FALSE",
 }

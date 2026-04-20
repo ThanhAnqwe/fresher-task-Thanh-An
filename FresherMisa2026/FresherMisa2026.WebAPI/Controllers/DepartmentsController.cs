@@ -33,5 +33,25 @@ namespace FresherMisa2026.WebAPI.Controllers
 
             return response;
         }
+
+        [HttpGet("{code}/employees")]
+        public async Task<ActionResult<ServiceResponse>> GetEmployeesByCode(string code)
+        {
+            var response = new ServiceResponse();
+            response.Data = await _departmentSerice.GetEmployeesByDeptCodeAsync(code);
+            response.IsSuccess = true;
+
+            return response;
+        }
+
+        [HttpGet("{code}/employee-count")]
+        public async Task<ActionResult<ServiceResponse>> GetEmployeeCountByCode(string code)
+        {
+            var response = new ServiceResponse();
+            response.Data = await _departmentSerice.GetEmployeeCountByDeptCodeAsync(code);
+            response.IsSuccess = true;
+
+            return response;
+        }
     }
 }

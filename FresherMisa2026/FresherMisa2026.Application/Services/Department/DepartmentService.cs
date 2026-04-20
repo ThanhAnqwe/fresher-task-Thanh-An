@@ -65,6 +65,18 @@ namespace FresherMisa2026.Application.Services
 
             return errors;
         }
+
+        public async Task<ServiceResponse> GetEmployeesByDeptCodeAsync(string code)
+        {
+            var data = await _deptRepository.GetEmployeesByCodeAsync(code);
+            return CreateSuccessResponse(data);
+        }
+
+        public async Task<ServiceResponse> GetEmployeeCountByDeptCodeAsync(string code)
+        {
+            var count = await _deptRepository.GetEmployeeCountByCodeAsync(code);
+            return CreateSuccessResponse(count);
+        }
         #endregion OVERRIDE METHODS
     }
 }

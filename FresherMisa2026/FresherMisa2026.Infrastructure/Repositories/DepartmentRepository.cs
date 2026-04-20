@@ -2,9 +2,11 @@
 using FresherMisa2026.Application.Extensions;
 using FresherMisa2026.Application.Interfaces.Repositories;
 using FresherMisa2026.Entities.Department;
+using FresherMisa2026.Entities.Employee;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
 namespace FresherMisa2026.Infrastructure.Repositories
@@ -48,5 +50,38 @@ namespace FresherMisa2026.Infrastructure.Repositories
             };
             return await _dbConnection.QueryFirstOrDefaultAsync<Department>(query, @param, commandType: System.Data.CommandType.Text);
         }
+
+        /// <summary>
+        /// Đếm số employee theo department code
+        /// </summary>
+        public async Task<int> GetEmployeeCountByCodeAsync(string code)
+        {
+
+            string query = SQLExtension.GetQuery("Department.GetEmployeeCountByCode");
+
+            var param = new Dictionary<string, object>
+            {
+                { "@DepartmentCode", code }
+            };
+
+            return await _dbConnection.QuerySingleAsync<int>(query, param, commandType: CommandType.Text);
+        }
+
+        /// <summary>
+        /// Lấy danh sách employee theo department code
+        /// </summary>
+        public async Task<IEnumerable<Employee>> GetEmployeesByCodeAsync(string code)
+        {
+            string query = SQLExtension.GetQuery("Department.GetEmployeesByCode");
+
+            var param = new Dictionary<string, object>
+            {
+                { "@DepartmentCode", code }
+            };
+
+            return await _dbConnection.QueryAsync<Employee>(query, param, commandType: CommandType.Text);
+        }
+
+
     }
 }
