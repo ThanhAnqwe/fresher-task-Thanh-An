@@ -11,6 +11,7 @@ using System.Data;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace FresherMisa2026.Infrastructure.Repositories
 {
@@ -22,22 +23,22 @@ namespace FresherMisa2026.Infrastructure.Repositories
     public class BaseRepository<TEntity> : IBaseRepository<TEntity>, IDisposable where TEntity : BaseModel
     {
         //Properties
-        string _connectionString = string.Empty;
-        IConfiguration _configuration;
-        protected IDbConnection _dbConnection = null;
-        protected string _tableName;
-        public Type _modelType = null;
+        protected readonly IDbConnection _dbConnection;
+        protected readonly IMemoryCache _memoryCache;
+        protected readonly string _tableName;
+        protected readonly string _cacheKeyPrefix;
+        protected readonly Type _modelType;
 
 
 
         //Constructor
-        public BaseRepository(IConfiguration configuration)
+        public BaseRepository(IDbConnection dbConnection, IMemoryCache memoryCache)
         {
-            _configuration = configuration;
-            _connectionString = _configuration.GetConnectionString("DefaultConnection")!;
-            _dbConnection = new MySqlConnection(_connectionString);
+            _dbConnection = dbConnection;
+            _memoryCache = memoryCache;
             _modelType = typeof(TEntity);
-            _tableName = _modelType.GetTableName();
+            _tableName = _modelType.Name;
+            _cacheKeyPrefix = $"Cache_{_tableName}";
         }
 
 
@@ -84,68 +85,53 @@ namespace FresherMisa2026.Infrastructure.Repositories
         }
 
         /// <summary>
-        /// Lấy tất cả theo command text
+        /// Lấy tất cả theo command text và thực hiện Caching
         /// </summary>
-        /// <returns></returns>
-        /// CREATED BY: DVHAI (11/07/2021)
+        /// CREATED BY: DVHAI (11/07/2021) - REFACTORED: 2026
         private async Task<IEnumerable<TEntity>> GetEntitiesUsingCommandTextAsync()
         {
-            var query = new StringBuilder($"select * from {_tableName}");
-            int whereCount = 0;
+            string cacheKey = $"{_cacheKeyPrefix}_All";
 
-            if (_modelType.GetHasDeletedColumn())
+            return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
             {
-                whereCount++;
-                query.Append($" where IsDeleted = FALSE");
-            }
+                // Yêu cầu: Thời gian cache 5 phút
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
 
-            var entities = await _dbConnection.QueryAsync<TEntity>(query.ToString(), commandType: CommandType.Text);
+                var query = new StringBuilder($"select * from {_tableName}");
 
-            return entities.ToList();
+                if (_modelType.GetHasDeletedColumn()) // Extension method của bạn
+                {
+                    query.Append($" where IsDeleted = FALSE");
+                }
+
+                var entities = await _dbConnection.QueryAsync<TEntity>(
+                    query.ToString(),
+                    commandType: CommandType.Text
+                );
+
+                return entities.ToList();
+            }) ?? new List<TEntity>();
         }
 
         /// <summary>
-        /// Lấy bản ghi theo id
+        /// Lấy bản ghi theo ID với Caching
         /// </summary>
-        /// <param name="entityId">Id của bản ghi</param>
-        /// <returns>Bản ghi tìm thấy hoặc null</returns>
-        /// CREATED BY: DVHAI (07/07/2021)
-        public async Task<TEntity> GetEntityByIDAsync(Guid entityId)
+        public virtual async Task<TEntity> GetEntityByIDAsync(Guid entityId)
         {
-            return await GetEntitieByIdUsingCommandTextAsync(entityId.ToString());
-        }
+            string cacheKey = $"{_cacheKeyPrefix}_{entityId}";
 
-        /// <summary>
-        /// Lấy bản ghi theo id dùng command text
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        private async Task<TEntity> GetEntitieByIdUsingCommandTextAsync(string id)
-        {
-            var query = new StringBuilder($"select * from {_tableName}");
-            int whereCount = 0;
-
-            Func<StringBuilder, bool> AppendWhere = (query) => { if (whereCount == 0) query.Append(" where "); return true; };
-
-            var primaryKey = _modelType.GetKeyName();
-
-            if (primaryKey != null)
+            return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
             {
-                AppendWhere(query);
-                query.Append($"{primaryKey} = @Id");
-                whereCount++;
-            }
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
 
-            if (_modelType.GetHasDeletedColumn())
-            {
-                AppendWhere(query);
-                query.Append(" AND IsDeleted = FALSE");
-                whereCount++;
-            }
-            
-            var entities = await _dbConnection.QueryFirstOrDefaultAsync<TEntity>(query.ToString(), new { Id = id }, commandType: CommandType.Text);
+                // Lưu ý: Tên cột ID thường là {TableName}Id hoặc tùy cấu hình của bạn
+                var sql = $"SELECT * FROM {_tableName} WHERE {_tableName}Id = @Id";
 
-            return entities;
+                return await _dbConnection.QueryFirstOrDefaultAsync<TEntity>(
+                    sql,
+                    new { Id = entityId }
+                );
+            });
         }
 
         /// <summary>

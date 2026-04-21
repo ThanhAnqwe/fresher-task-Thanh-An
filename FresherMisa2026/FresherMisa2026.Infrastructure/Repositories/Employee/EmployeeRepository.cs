@@ -1,9 +1,10 @@
 using Dapper;
 using FresherMisa2026.Application.Extensions;
-using FresherMisa2026.Entities.Extensions;
 using FresherMisa2026.Application.Interfaces.Repositories;
-using FresherMisa2026.Entities.Employee;
 using FresherMisa2026.Entities;
+using FresherMisa2026.Entities.Employee;
+using FresherMisa2026.Entities.Extensions;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Data;
@@ -12,7 +13,8 @@ namespace FresherMisa2026.Infrastructure.Repositories
 {
     public class EmployeeRepository : BaseRepository<Employee>, IEmployeeRepository
     {
-        public EmployeeRepository(IConfiguration configuration) : base(configuration)
+        public EmployeeRepository(IDbConnection dbConnection, IMemoryCache memoryCache)
+            : base(dbConnection, memoryCache)
         {
         }
 
